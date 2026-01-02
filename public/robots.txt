@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://photoswipe.qodam.com
+
+# Sitemaps
+Sitemap: https://photoswipe.qodam.com/sitemap.xml
