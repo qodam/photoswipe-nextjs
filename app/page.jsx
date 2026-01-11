@@ -3,51 +3,107 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Download, Trash2, Calendar, CheckCircle, ArrowRight, 
-  ArrowLeft, Menu, X, HardDrive, Apple, Play, Smartphone
+  ArrowLeft, Menu, X, HardDrive, Apple, Play, Smartphone, Loader2
 } from 'lucide-react';
 
 const PhotoSwipeLanding = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [deviceType, setDeviceType] = useState('unknown');
+  
+  // --- ÉTATS POUR LA WAITLIST ---
+  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('idle'); // 'idle', 'loading', 'success', 'error'
+  const [notification, setNotification] = useState('');
 
-  // --- CONFIGURATION DES LIENS ---
+  // --- CONFIGURATION ---
   const PLAY_STORE_LINK = "https://play.google.com/store/apps/details?id=com.codinghub.photoswipe";
-  // Remplace par ton vrai lien App Store
-  const APP_STORE_LINK = "https://apps.apple.com/us/app/photo-cleaner-pro-photoswipe/id6757101234"; 
+  // APP_STORE_LINK n'est plus utilisé directement, on ouvre la modale
 
   useEffect(() => {
-    // Gestion du scroll pour la nav
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
-
-    // Détection basique du device pour adapter l'UX
-    const ua = navigator.userAgent.toLowerCase();
-    if (/iphone|ipad|ipod/.test(ua)) setDeviceType('ios');
-    else if (/android/.test(ua)) setDeviceType('android');
-
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  // Composant Mockup Téléphone (Réutilisable)
+  // --- FONCTION D'ENVOI ---
+  const handleSubmitEmail = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    setNotification('');
+
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus('success');
+        setNotification("Noted! We'll let you know as soon as it's released.");
+        setEmail('');
+        setTimeout(() => {
+            setIsWaitlistOpen(false);
+            setStatus('idle');
+            setNotification('');
+        }, 3000);
+      } else {
+        setStatus('error');
+        setNotification(data.error || "An error has occurred.");
+      }
+    } catch (error) {
+      setStatus('error');
+      setNotification("Connection error.");
+    }
+  };
+
+  // --- SOUS-COMPOSANTS ---
+
   const PhoneMockup = ({ children, className = "" }) => (
     <div className={`relative mx-auto ${className}`} style={{ width: 270 }}>
       <div className="relative border-gray-900 bg-gray-900 border-[14px] rounded-[3rem] h-[540px] shadow-2xl flex flex-col overflow-hidden z-20">
-          
-          {/* Écran (Contenu) */}
           <div className="flex-1 bg-white relative overflow-hidden flex flex-col rounded-[2.2rem]">
-
-
-              {/* Le contenu passé en props */}
               {children}
-
           </div>
       </div>
     </div>
   );
 
+  // Bouton iOS qui ouvre la modale
+  const IosButton = ({ className = "", fullWidth = false }) => (
+    <button 
+      onClick={() => setIsWaitlistOpen(true)}
+      className={`flex items-center gap-3 bg-slate-900 text-white px-6 py-3.5 rounded-xl hover:bg-slate-800 transition-all hover:scale-105 shadow-xl shadow-slate-900/20 group ${fullWidth ? 'w-full justify-center' : ''} ${className}`}
+    >
+        <div className="relative">
+             <Apple size={28} className="text-white group-hover:text-slate-200"/>
+             {/* Badge Coming Soon */}
+             <span className="absolute -top-2 -right-3 bg-rose-500 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-slate-900">SOON</span>
+        </div>
+        <div className="text-left">
+            <div className="text-[10px] uppercase font-bold text-slate-400 leading-none">Coming on</div>
+            <div className="text-lg font-bold leading-none mt-0.5">App Store</div>
+        </div>
+    </button>
+  );
+
+  const AndroidButton = ({ className = "", fullWidth = false }) => (
+    <a 
+      href={PLAY_STORE_LINK}
+      className={`flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-6 py-3.5 rounded-xl hover:bg-slate-50 transition-all hover:scale-105 shadow-lg shadow-slate-200/50 ${fullWidth ? 'w-full justify-center' : ''} ${className}`}
+    >
+      <Play size={26} className="text-slate-600"/>
+      <div className="text-left">
+        <div className="text-[10px] uppercase font-bold text-slate-500 leading-none">Get it on</div>
+        <div className="text-lg font-bold leading-none mt-0.5">Google Play</div>
+      </div>
+    </a>
+  );
 
   return (
     <div className="font-sans text-slate-800 min-h-screen selection:bg-rose-200 relative overflow-hidden bg-white">
@@ -58,6 +114,52 @@ const PhotoSwipeLanding = () => {
           <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-[100px] opacity-50 mix-blend-multiply"></div>
       </div>
 
+      {/* --- MODALE WAITLIST (POPUP) --- */}
+      {isWaitlistOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsWaitlistOpen(false)}></div>
+            <div className="relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                <button onClick={() => setIsWaitlistOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1">
+                    <X size={20} />
+                </button>
+                
+                <div className="text-center">
+                    <div className="w-14 h-14 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-600 rotate-[-6deg]">
+                        <Apple size={30} />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Not yet available</h3>
+                    <p className="text-slate-500 text-sm mt-2 mb-6 leading-relaxed">
+                        The iOS version is currently being reviewed by Apple. Leave your email address to be notified as soon as it's released!
+                    </p>
+
+                    <form onSubmit={handleSubmitEmail} className="space-y-3">
+                        <input 
+                            type="email" 
+                            placeholder="your@email.com"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all text-sm"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                        <button 
+                            type="submit" 
+                            disabled={status === 'loading' || status === 'success'}
+                            className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                        >
+                            {status === 'loading' ? <Loader2 className="animate-spin w-5 h-5"/> : "Notify me"}
+                        </button>
+                    </form>
+                    
+                    {notification && (
+                        <div className={`mt-4 text-sm font-medium ${status === 'success' ? 'text-green-600' : 'text-rose-500'}`}>
+                            {notification}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+      )}
+
       <div className="relative z-10">
       
         {/* --- NAVIGATION --- */}
@@ -66,7 +168,7 @@ const PhotoSwipeLanding = () => {
             {/* Logo */}
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center text-white transform -rotate-6 shadow-lg shadow-rose-500/20">
-                  <img src="logo.png" className='w-full h-full rounded-lg' />
+                  <img src="logo.png" className='w-full h-full rounded-lg' alt="Logo" />
               </div>
               <span className="text-2xl font-bold tracking-tight text-slate-900">PhotoSwipe</span>
             </div>
@@ -77,9 +179,8 @@ const PhotoSwipeLanding = () => {
               <a href="#how-it-works" className="text-slate-600 hover:text-rose-500 font-medium transition-colors">How it works</a>
               
               <div className="flex items-center gap-2">
-                <a href={APP_STORE_LINK} className="p-2 text-slate-500 hover:text-black transition-colors" title="iOS"><Apple size={22}/></a>
+                <button onClick={() => setIsWaitlistOpen(true)} className="p-2 text-slate-500 hover:text-black transition-colors" title="iOS"><Apple size={22}/></button>
                 <a href={PLAY_STORE_LINK} className="p-2 text-slate-500 hover:text-green-600 transition-colors" title="Android"><Play size={22}/></a>
-                
               </div>
             </div>
 
@@ -97,28 +198,11 @@ const PhotoSwipeLanding = () => {
                 <a href="#features" onClick={toggleMenu} className="text-2xl font-bold text-slate-800">Features</a>
                 <a href="#how-it-works" onClick={toggleMenu} className="text-2xl font-bold text-slate-800">How it works</a>
                 <hr className="border-slate-100 my-4"/>
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <a 
-                    href={APP_STORE_LINK}
-                    className="flex items-center gap-3 bg-slate-900 text-white px-6 py-3.5 rounded-xl hover:bg-slate-800 transition-all hover:scale-105 shadow-xl shadow-slate-900/20 w-full sm:w-auto justify-center"
-                  >
-                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.93-.91 1.32.05 2.54.53 3.4 1.36-1.87 1.13-2.8 2.88-2.66 4.86.13 2.05 1.77 3.79 3.75 4.31l-.22.12zm-4.43-15.6c.71-1.03 1.2-2.33 1.07-3.66-1.21.05-2.61.81-3.41 1.78-.65.78-1.25 2.09-1.07 3.43 1.32.1 2.71-.65 3.41-1.55z"/></svg>
-                    <div className="text-left">
-                      <div className="text-[10px] uppercase font-bold text-slate-400 leading-none">Download on the</div>
-                      <div className="text-lg font-bold leading-none mt-0.5">App Store</div>
-                    </div>
-                  </a>
-                  
-                  <a 
-                    href={PLAY_STORE_LINK}
-                    className="flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-6 py-3.5 rounded-xl hover:bg-slate-50 transition-all hover:scale-105 shadow-lg shadow-slate-200/50 w-full sm:w-auto justify-center"
-                  >
-                    <svg className="w-7 h-7 text-slate-600" viewBox="0 0 24 24" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" /></svg>
-                    <div className="text-left">
-                      <div className="text-[10px] uppercase font-bold text-slate-500 leading-none">Get it on</div>
-                      <div className="text-lg font-bold leading-none mt-0.5">Google Play</div>
-                    </div>
-                  </a>
+                
+                <div className="flex flex-col gap-4">
+                  {/* Utilisation des nouveaux boutons */}
+                  <IosButton fullWidth />
+                  <AndroidButton fullWidth />
                 </div>
              </div>
           </div>
@@ -152,33 +236,13 @@ const PhotoSwipeLanding = () => {
                 
                 {/* --- DOWNLOAD BUTTONS AREA --- */}
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <a 
-                    href={APP_STORE_LINK}
-                    className="flex items-center gap-3 bg-slate-900 text-white px-6 py-3.5 rounded-xl hover:bg-slate-800 transition-all hover:scale-105 shadow-xl shadow-slate-900/20 w-full sm:w-auto justify-center"
-                  >
-                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.93-.91 1.32.05 2.54.53 3.4 1.36-1.87 1.13-2.8 2.88-2.66 4.86.13 2.05 1.77 3.79 3.75 4.31l-.22.12zm-4.43-15.6c.71-1.03 1.2-2.33 1.07-3.66-1.21.05-2.61.81-3.41 1.78-.65.78-1.25 2.09-1.07 3.43 1.32.1 2.71-.65 3.41-1.55z"/></svg>
-                    <div className="text-left">
-                      <div className="text-[10px] uppercase font-bold text-slate-400 leading-none">Download on the</div>
-                      <div className="text-lg font-bold leading-none mt-0.5">App Store</div>
-                    </div>
-                  </a>
-                  
-                  <a 
-                    href={PLAY_STORE_LINK}
-                    className="flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-6 py-3.5 rounded-xl hover:bg-slate-50 transition-all hover:scale-105 shadow-lg shadow-slate-200/50 w-full sm:w-auto justify-center"
-                  >
-                    <svg className="w-7 h-7 text-slate-600" viewBox="0 0 24 24" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" /></svg>
-                    <div className="text-left">
-                      <div className="text-[10px] uppercase font-bold text-slate-500 leading-none">Get it on</div>
-                      <div className="text-lg font-bold leading-none mt-0.5">Google Play</div>
-                    </div>
-                  </a>
+                  <IosButton />
+                  <AndroidButton />
                 </div>
               </div>
 
               {/* Hero Phone Mockup */}
               <div className="flex-1 relative flex justify-center perspective-1000">
-                  {/* Floating Elements */}
                   <div className="absolute top-20 -left-12 bg-white p-4 rounded-2xl shadow-xl z-30 animate-bounce duration-[3000ms] border border-rose-50 hidden md:block">
                      <div className="flex items-center gap-3">
                         <div className="bg-rose-100 p-2 rounded-lg text-rose-500"><Trash2 size={20}/></div>
@@ -190,7 +254,7 @@ const PhotoSwipeLanding = () => {
                   </div>
 
                   <PhoneMockup className="transform rotate-3 hover:rotate-0 transition-all duration-700">
-                      <img src="delete.jpg" alt="App Screenshot Main" className='w-full h-full  ounded-3xl' />
+                      <img src="delete.jpg" alt="App Screenshot Main" className='w-full h-full rounded-3xl' />
                   </PhoneMockup>
               </div>
             </div>
@@ -204,9 +268,8 @@ const PhotoSwipeLanding = () => {
             <div className="flex flex-col md:flex-row items-center gap-20">
               
               <div className="flex-1 order-2 md:order-1">
-
                   <PhoneMockup>
-                      <img src="calendar.jpg" alt="Calendar" className='w-full h-full  ounded-3xl' />
+                      <img src="calendar.jpg" alt="Calendar" className='w-full h-full rounded-3xl' />
                   </PhoneMockup>
               </div>
 
@@ -243,7 +306,6 @@ const PhotoSwipeLanding = () => {
           </div>
 
           <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-12 relative">
-             {/* Left Text */}
              <div className="hidden md:block text-right space-y-2 translate-y-12">
                  <h3 className="text-2xl font-bold text-rose-500">Trash It</h3>
                  <p className="text-slate-500 text-sm w-48 ml-auto">Blurry pics, duplicates, and screenshots go here.</p>
@@ -252,16 +314,13 @@ const PhotoSwipeLanding = () => {
                  </div>
              </div>
 
-             {/* CENTER PHONE */}
              <div className="relative z-10">
                 <div className="absolute inset-0 bg-gradient-to-r from-rose-200 to-pink-200 rounded-full blur-[100px] opacity-40"></div>
-
                   <PhoneMockup>
-                      <img src="save.jpg" alt="Swipe" className='w-full h-full  ounded-3xl' />
+                      <img src="save.jpg" alt="Swipe" className='w-full h-full rounded-3xl' />
                   </PhoneMockup>
              </div>
 
-             {/* Right Text */}
              <div className="hidden md:block text-left space-y-2 translate-y-12">
                  <h3 className="text-2xl font-bold text-green-500">Keep It</h3>
                  <p className="text-slate-500 text-sm w-48">Only your absolute best memories stay.</p>
@@ -290,34 +349,14 @@ const PhotoSwipeLanding = () => {
                  </p>
                  
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <a 
-                    href={APP_STORE_LINK}
-                    className="flex items-center gap-3 bg-slate-900 text-white px-6 py-3.5 rounded-xl hover:bg-slate-800 transition-all hover:scale-105 shadow-xl shadow-slate-900/20 w-full sm:w-auto justify-center"
-                  >
-                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.93-.91 1.32.05 2.54.53 3.4 1.36-1.87 1.13-2.8 2.88-2.66 4.86.13 2.05 1.77 3.79 3.75 4.31l-.22.12zm-4.43-15.6c.71-1.03 1.2-2.33 1.07-3.66-1.21.05-2.61.81-3.41 1.78-.65.78-1.25 2.09-1.07 3.43 1.32.1 2.71-.65 3.41-1.55z"/></svg>
-                    <div className="text-left">
-                      <div className="text-[10px] uppercase font-bold text-slate-400 leading-none">Download on the</div>
-                      <div className="text-lg font-bold leading-none mt-0.5">App Store</div>
-                    </div>
-                  </a>
-                  
-                  <a 
-                    href={PLAY_STORE_LINK}
-                    className="flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-6 py-3.5 rounded-xl hover:bg-slate-50 transition-all hover:scale-105 shadow-lg shadow-slate-200/50 w-full sm:w-auto justify-center"
-                  >
-                    <svg className="w-7 h-7 text-slate-600" viewBox="0 0 24 24" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" /></svg>
-                    <div className="text-left">
-                      <div className="text-[10px] uppercase font-bold text-slate-500 leading-none">Get it on</div>
-                      <div className="text-lg font-bold leading-none mt-0.5">Google Play</div>
-                    </div>
-                  </a>
+                  <IosButton />
+                  <AndroidButton />
                 </div>
               </div>
 
               <div className="flex-1 relative z-10">
-                 
                   <PhoneMockup>
-                      <img src="end.jpg" alt="End Page" className='w-full h-full  ounded-3xl' />
+                      <img src="end.jpg" alt="End Page" className='w-full h-full rounded-3xl' />
                   </PhoneMockup>
               </div>
 
@@ -330,7 +369,7 @@ const PhotoSwipeLanding = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
              <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white">
-                  <img src="logo.png" className='w-full h-full rounded-lg' />
+                  <img src="logo.png" className='w-full h-full rounded-lg' alt="Logo" />
                 </div>
                 <span className="font-bold text-xl text-slate-900">PhotoSwipe</span>
              </div>
