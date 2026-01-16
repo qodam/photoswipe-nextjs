@@ -18,7 +18,7 @@ const PhotoSwipeLanding = () => {
 
   // --- CONFIGURATION ---
   const PLAY_STORE_LINK = "https://play.google.com/store/apps/details?id=com.codinghub.photoswipe";
-  // APP_STORE_LINK n'est plus utilisé directement, on ouvre la modale
+  const APP_STORE_LINK = "https://apps.apple.com/us/app/photo-cleaner-pro-photoswipe/id6757101234";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -76,20 +76,18 @@ const PhotoSwipeLanding = () => {
 
   // Bouton iOS qui ouvre la modale
   const IosButton = ({ className = "", fullWidth = false }) => (
-    <button 
-      onClick={() => setIsWaitlistOpen(true)}
-      className={`flex items-center gap-3 bg-slate-900 text-white px-6 py-3.5 rounded-xl hover:bg-slate-800 transition-all hover:scale-105 shadow-xl shadow-slate-900/20 group ${fullWidth ? 'w-full justify-center' : ''} ${className}`}
+    <a 
+      href={APP_STORE_LINK}
+      className={`flex items-center gap-3 bg-rose-600 text-white px-6 py-3.5 rounded-xl hover:bg-slate-800 transition-all hover:scale-105 shadow-xl shadow-slate-900/20 group ${fullWidth ? 'w-full justify-center' : ''} ${className}`}
     >
         <div className="relative">
-             <Apple size={28} className="text-white group-hover:text-slate-200"/>
-             {/* Badge Coming Soon */}
-             <span className="absolute -top-2 -right-3 bg-rose-500 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-slate-900">SOON</span>
+          <Apple size={28} className="text-white group-hover:text-slate-200"/>
         </div>
         <div className="text-left">
-            <div className="text-[10px] uppercase font-bold text-slate-400 leading-none">Coming on</div>
+            <div className="text-[10px] uppercase font-bold text-white leading-none">Download on the</div>
             <div className="text-lg font-bold leading-none mt-0.5">App Store</div>
         </div>
-    </button>
+    </a>
   );
 
   const AndroidButton = ({ className = "", fullWidth = false }) => (
@@ -114,52 +112,6 @@ const PhotoSwipeLanding = () => {
           <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-[100px] opacity-50 mix-blend-multiply"></div>
       </div>
 
-      {/* --- MODALE WAITLIST (POPUP) --- */}
-      {isWaitlistOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsWaitlistOpen(false)}></div>
-            <div className="relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
-                <button onClick={() => setIsWaitlistOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1">
-                    <X size={20} />
-                </button>
-                
-                <div className="text-center">
-                    <div className="w-14 h-14 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-rose-600 rotate-[-6deg]">
-                        <Apple size={30} />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900">Not yet available</h3>
-                    <p className="text-slate-500 text-sm mt-2 mb-6 leading-relaxed">
-                        The iOS version is currently being reviewed by Apple. Leave your email address to be notified as soon as it's released!
-                    </p>
-
-                    <form onSubmit={handleSubmitEmail} className="space-y-3">
-                        <input 
-                            type="email" 
-                            placeholder="your@email.com"
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all text-sm"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                        <button 
-                            type="submit" 
-                            disabled={status === 'loading' || status === 'success'}
-                            className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-                        >
-                            {status === 'loading' ? <Loader2 className="animate-spin w-5 h-5"/> : "Notify me"}
-                        </button>
-                    </form>
-                    
-                    {notification && (
-                        <div className={`mt-4 text-sm font-medium ${status === 'success' ? 'text-green-600' : 'text-rose-500'}`}>
-                            {notification}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-      )}
-
       <div className="relative z-10">
       
         {/* --- NAVIGATION --- */}
@@ -179,7 +131,7 @@ const PhotoSwipeLanding = () => {
               <a href="#how-it-works" className="text-slate-600 hover:text-rose-500 font-medium transition-colors">How it works</a>
               
               <div className="flex items-center gap-2">
-                <button onClick={() => setIsWaitlistOpen(true)} className="p-2 text-slate-500 hover:text-black transition-colors" title="iOS"><Apple size={22}/></button>
+                <a href={APP_STORE_LINK} className="p-2 text-slate-500 hover:text-black transition-colors" title="iOS"><Apple size={22}/></a>
                 <a href={PLAY_STORE_LINK} className="p-2 text-slate-500 hover:text-green-600 transition-colors" title="Android"><Play size={22}/></a>
               </div>
             </div>
