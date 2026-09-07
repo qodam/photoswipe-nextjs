@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import FirebaseAnalytics from "@/components/FirebaseAnalytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -88,7 +89,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PhotoSwipe - The Fun Way to Clean Photos",
-    description: "Identify and delete clutter from your gallery. Just swipe it.",
+    description:
+      "Identify and delete clutter from your gallery. Just swipe it.",
     images: ["/logo.png"],
     creator: "@qodam",
   },
@@ -136,6 +138,7 @@ export default function RootLayout({
             }),
           }}
         />
+        <FirebaseAnalytics />
         {children}
       </body>
     </html>
