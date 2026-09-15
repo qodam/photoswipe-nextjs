@@ -17,9 +17,19 @@ import {
 // --- IMPORTATION FIREBASE ANALYTICS ---
 import { getAnalytics, isSupported, logEvent } from "firebase/analytics";
 import { app } from "@/lib/firebase";
+import {
+  useNotify,
+  type Platform,
+  type Placement,
+} from "@/app/hooks/useNotify";
 
-type Platform = "google_play" | "app_store";
+// --- CONFIGURATION ---
+const PLAY_STORE_LINK =
+  "https://play.google.com/store/apps/details?id=com.codinghub.photoswipe";
+const APP_STORE_LINK =
+  "https://apps.apple.com/us/app/photo-cleaner-pro-photoswipe/id6757101234";
 
+// --- TYPES ---
 interface PhoneMockupProps {
   children: React.ReactNode;
   className?: string;
@@ -29,68 +39,66 @@ interface StoreButtonProps {
   className?: string;
   fullWidth?: boolean;
   onClick?: () => void;
+  placement: Placement;
 }
 
-const PhotoSwipeLanding = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+// --- SUIVI DES CLICS (Telegram + Firebase Analytics) ---
+const useDownloadTracking = () => {
+  const { notifyDownloadClick } = useNotify();
 
-  // --- CONFIGURATION ---
-  const PLAY_STORE_LINK =
-    "https://play.google.com/store/apps/details?id=com.codinghub.photoswipe";
-  const APP_STORE_LINK =
-    "https://apps.apple.com/us/app/photo-cleaner-pro-photoswipe/id6757101234";
-
-  // --- FONCTION DE SUIVI ANALYTICS ---
-  const handleDownloadClick = async (platform: Platform) => {
+  const handleDownloadClick = async (
+    platform: Platform,
+    placement: Placement,
+  ) => {
     if (typeof window === "undefined") return;
 
-    const eventName =
-      platform === "app_store"
-        ? "click_download_apple"
-        : "click_download_android";
+    // Notification indépendante d'Analytics (fonctionne même avec un adblock)
+    notifyDownloadClick(platform, placement);
 
     try {
       if (await isSupported()) {
-        const analytics = getAnalytics(app);
-        logEvent(analytics, eventName, {
-          page_location: window.location.href,
-        });
+        logEvent(
+          getAnalytics(app),
+          platform === "app_store"
+            ? "click_download_apple"
+            : "click_download_android",
+          { page_location: window.location.href, placement },
+        );
       }
     } catch (error) {
       console.error("Firebase Analytics Error:", error);
     }
   };
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  return { handleDownloadClick };
+};
 
-  const toggleMenu = () => setIsMenuOpen((open) => !open);
-
-  const PhoneMockup = ({ children, className = "" }: PhoneMockupProps) => (
-    <div className={`relative mx-auto ${className}`} style={{ width: 270 }}>
-      <div className="relative border-gray-900 bg-gray-900 border-[14px] rounded-[3rem] h-[540px] shadow-2xl flex flex-col overflow-hidden z-20">
-        <div className="flex-1 bg-white relative overflow-hidden flex flex-col rounded-[2.2rem]">
-          {children}
-        </div>
+// --- COMPOSANTS ---
+const PhoneMockup = ({ children, className = "" }: PhoneMockupProps) => (
+  <div className={`relative mx-auto ${className}`} style={{ width: 270 }}>
+    <div className="relative border-gray-900 bg-gray-900 border-[14px] rounded-[3rem] h-[540px] shadow-2xl flex flex-col overflow-hidden z-20">
+      <div className="flex-1 bg-white relative overflow-hidden flex flex-col rounded-[2.2rem]">
+        {children}
       </div>
     </div>
-  );
+  </div>
+);
 
-  const IosButton = ({
-    className = "",
-    fullWidth = false,
-    onClick,
-  }: StoreButtonProps) => (
+const IosButton = ({
+  className = "",
+  fullWidth = false,
+  onClick,
+  placement,
+}: StoreButtonProps) => {
+  const { handleDownloadClick } = useDownloadTracking();
+
+  return (
     <a
       href={APP_STORE_LINK}
       target="_blank"
       rel="noreferrer"
       onClick={() => {
-        handleDownloadClick("app_store");
+        handleDownloadClick("app_store", placement);
         onClick?.();
       }}
       className={`flex items-center gap-3 bg-rose-600 text-white px-6 py-3.5 rounded-xl hover:bg-rose-700 transition-all hover:scale-105 shadow-xl shadow-rose-900/20 group ${
@@ -106,18 +114,23 @@ const PhotoSwipeLanding = () => {
       </div>
     </a>
   );
+};
 
-  const AndroidButton = ({
-    className = "",
-    fullWidth = false,
-    onClick,
-  }: StoreButtonProps) => (
+const AndroidButton = ({
+  className = "",
+  fullWidth = false,
+  onClick,
+  placement,
+}: StoreButtonProps) => {
+  const { handleDownloadClick } = useDownloadTracking();
+
+  return (
     <a
       href={PLAY_STORE_LINK}
       target="_blank"
       rel="noreferrer"
       onClick={() => {
-        handleDownloadClick("google_play");
+        handleDownloadClick("google_play", placement);
         onClick?.();
       }}
       className={`flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-6 py-3.5 rounded-xl hover:bg-slate-50 transition-all hover:scale-105 shadow-lg shadow-slate-200/50 ${
@@ -133,6 +146,22 @@ const PhotoSwipeLanding = () => {
       </div>
     </a>
   );
+};
+
+// --- PAGE ---
+const PhotoSwipeLanding = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  const { handleDownloadClick } = useDownloadTracking();
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const toggleMenu = () => setIsMenuOpen((open) => !open);
 
   return (
     <div className="font-sans text-slate-800 min-h-screen selection:bg-rose-200 relative overflow-hidden bg-white">
@@ -186,7 +215,7 @@ const PhotoSwipeLanding = () => {
                   href={APP_STORE_LINK}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => handleDownloadClick("app_store")}
+                  onClick={() => handleDownloadClick("app_store", "nav")}
                   className="p-2 text-slate-500 hover:text-black transition-colors"
                   title="iOS"
                   aria-label="Download on the App Store"
@@ -197,7 +226,7 @@ const PhotoSwipeLanding = () => {
                   href={PLAY_STORE_LINK}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => handleDownloadClick("google_play")}
+                  onClick={() => handleDownloadClick("google_play", "nav")}
                   className="p-2 text-slate-500 hover:text-green-600 transition-colors"
                   title="Android"
                   aria-label="Get it on Google Play"
@@ -239,8 +268,16 @@ const PhotoSwipeLanding = () => {
               <hr className="border-slate-100 my-4" />
 
               <div className="flex flex-col gap-4">
-                <IosButton fullWidth onClick={toggleMenu} />
-                <AndroidButton fullWidth onClick={toggleMenu} />
+                <IosButton
+                  fullWidth
+                  onClick={toggleMenu}
+                  placement="mobile_menu"
+                />
+                <AndroidButton
+                  fullWidth
+                  onClick={toggleMenu}
+                  placement="mobile_menu"
+                />
               </div>
             </div>
           </div>
@@ -277,8 +314,8 @@ const PhotoSwipeLanding = () => {
 
                 {/* --- DOWNLOAD BUTTONS AREA --- */}
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <IosButton />
-                  <AndroidButton />
+                  <IosButton placement="hero" />
+                  <AndroidButton placement="hero" />
                 </div>
               </div>
 
@@ -425,8 +462,8 @@ const PhotoSwipeLanding = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <IosButton />
-                  <AndroidButton />
+                  <IosButton placement="cta_bottom" />
+                  <AndroidButton placement="cta_bottom" />
                 </div>
               </div>
 
