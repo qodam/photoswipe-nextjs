@@ -44,7 +44,7 @@ interface StoreButtonProps {
 
 // --- SUIVI DES CLICS (Telegram + Firebase Analytics) ---
 const useDownloadTracking = () => {
-  const { notifyDownloadClick } = useNotify();
+  const { notifyDownloadClick } = useNotify("photoswipe");
 
   const handleDownloadClick = async (
     platform: Platform,
