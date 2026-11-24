@@ -77,7 +77,7 @@ export const metadata: Metadata = {
     siteName: "PhotoSwipe",
     images: [
       {
-        url: "/logo.png", // Assure-toi d'avoir une image open-graph (1200x630 recommandé)
+        url: "/icon.webp", // Assure-toi d'avoir une image open-graph (1200x630 recommandé)
         width: 512,
         height: 512,
         alt: "PhotoSwipe App Interface",
@@ -91,15 +91,15 @@ export const metadata: Metadata = {
     title: "PhotoSwipe - The Fun Way to Clean Photos",
     description:
       "Identify and delete clutter from your gallery. Just swipe it.",
-    images: ["/logo.png"],
+    images: ["/icon.webp"],
     creator: "@qodam",
   },
 
   // 5. Icons
   icons: {
     icon: "/favicon.ico",
-    shortcut: "/logo.png",
-    apple: "/logo.png", // Icône pour l'écran d'accueil iOS
+    shortcut: "/icon.webp",
+    apple: "/icon.webp", // Icône pour l'écran d'accueil iOS
   },
 
   alternates: {

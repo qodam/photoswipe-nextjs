@@ -22,6 +22,7 @@ import {
   type Platform,
   type Placement,
 } from "@/app/hooks/useNotify";
+import Image from "next/image";
 
 // --- CONFIGURATION ---
 const PLAY_STORE_LINK =
@@ -184,8 +185,10 @@ const PhotoSwipeLanding = () => {
             {/* Logo */}
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center text-white transform -rotate-6 shadow-lg shadow-rose-500/20">
-                <img
-                  src="/logo.png"
+                <Image
+                  src="/icon.webp"
+                  width={40}
+                  height={40}
                   className="w-full h-full rounded-lg object-cover"
                   alt="PhotoSwipe Logo"
                 />
@@ -338,9 +341,11 @@ const PhotoSwipeLanding = () => {
                 </div>
 
                 <PhoneMockup className="transform rotate-3 hover:rotate-0 transition-all duration-700">
-                  <img
-                    src="/delete.jpg"
+                  <Image
+                    src="/delete-1.webp"
                     alt="PhotoSwipe main screen"
+                    width={300}
+                    height={600}
                     className="w-full h-full object-cover rounded-3xl"
                   />
                 </PhoneMockup>
@@ -355,9 +360,11 @@ const PhotoSwipeLanding = () => {
             <div className="flex flex-col md:flex-row items-center gap-20">
               <div className="flex-1 order-2 md:order-1">
                 <PhoneMockup>
-                  <img
-                    src="/calendar.jpg"
+                  <Image
+                    src="/calendar-1.webp"
                     alt="Calendar view"
+                    width={300}
+                    height={600}
                     className="w-full h-full object-cover rounded-3xl"
                   />
                 </PhoneMockup>
@@ -420,8 +427,10 @@ const PhotoSwipeLanding = () => {
             <div className="relative z-10">
               <div className="absolute inset-0 bg-gradient-to-r from-rose-200 to-pink-200 rounded-full blur-[100px] opacity-40"></div>
               <PhoneMockup>
-                <img
-                  src="/save.jpg"
+                <Image
+                  width={300}
+                  height={600}
+                  src="/save-1.webp"
                   alt="Swipe interface"
                   className="w-full h-full object-cover rounded-3xl"
                 />
@@ -469,9 +478,11 @@ const PhotoSwipeLanding = () => {
 
               <div className="flex-1 relative z-10">
                 <PhoneMockup>
-                  <img
-                    src="/end.jpg"
+                  <Image
+                    src="/end-1.webp"
                     alt="Storage saved screen"
+                    width={300}
+                    height={600}
                     className="w-full h-full object-cover rounded-3xl"
                   />
                 </PhoneMockup>
@@ -485,8 +496,10 @@ const PhotoSwipeLanding = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white">
-                <img
-                  src="/logo.png"
+                <Image
+                  src="/icon.webp"
+                  width={40}
+                  height={40}
                   className="w-full h-full rounded-lg object-cover"
                   alt="PhotoSwipe Logo"
                 />
